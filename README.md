@@ -6,14 +6,14 @@ This repository contains the complete database design, implementation scripts, a
 
 ## 📁 Repository Structure
 
-* **[`Boston_Hospital_Case_Study.md`](./Boston_Hospital_Case_Study.md)**: Comprehensive academic technical report containing:
-  * **Part A:** Database Description & Architectural Rationale
+* **[`Boston_Hospital_Case_Study.md`](./Boston_Hospital_Case_Study.md)**: Academic coursework report containing:
+  * **Part A:** Database Description & Design Choices
   * **Part B:** Entity Relationship Diagram (ERD) with Mermaid Crow's Foot Notation
   * **Part C:** Relational Schema, Functional Dependencies, and Normalization Proofs (3NF & BCNF)
   * **Part D:** Database and Table DDL Scripts & Sample Population Data
   * **Part E:** Views, Stored Procedures supporting Transactions (a) through (n), and Validation Test Queries
-* **[`boston_hospital_database.sql`](./boston_hospital_database.sql)**: Pure SQL script ready to run directly in MySQL Workbench or MySQL CLI.
-* **[`README.md`](./README.md)**: This complete setup, execution, and architectural guide.
+* **[`boston_hospital_database.sql`](./boston_hospital_database.sql)**: SQL script ready to run directly in MySQL Workbench or MySQL CLI.
+* **[`README.md`](./README.md)**: Setup, execution, and architectural guide.
 
 ---
 

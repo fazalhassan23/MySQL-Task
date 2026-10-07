@@ -1,27 +1,26 @@
--- =============================================================================
--- BOSTON HOSPITAL DATABASE MANAGEMENT SYSTEM
--- Complete SQL Implementation Script for University Submission
--- DBMS: MySQL 8.0+
--- =============================================================================
+-- Boston Hospital Database System
+-- Database Design and Implementation Coursework
+-- Target DBMS: MySQL 8.0
 
 DROP DATABASE IF EXISTS BostonHospital;
 CREATE DATABASE BostonHospital CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE BostonHospital;
 
--- =============================================================================
--- PART 1: DDL - TABLES, PRIMARY KEYS, FOREIGN KEYS & INDEXES
--- =============================================================================
 
--- 1. Departments Table
+-- ----------------------------------------------------------------------
+-- 1. Table Definitions & Foreign Key Constraints
+-- ----------------------------------------------------------------------
+
+-- Hospital departments
 CREATE TABLE Departments (
     DepartmentNumber INT PRIMARY KEY,
     DepartmentName VARCHAR(100) NOT NULL,
     Location VARCHAR(100) NOT NULL,
     TotalBeds INT NOT NULL CHECK (TotalBeds >= 0),
     TelephoneExtension VARCHAR(20) NOT NULL
-) ENGINE=InnoDB;
+);
 
--- 2. Staff Table
+-- Hospital staff members
 CREATE TABLE Staff (
     StaffNumber VARCHAR(20) PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
@@ -37,9 +36,9 @@ CREATE TABLE Staff (
     DepartmentNumber INT NULL,
     CONSTRAINT fk_staff_department FOREIGN KEY (DepartmentNumber) 
         REFERENCES Departments(DepartmentNumber) ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE=InnoDB;
+);
 
--- 3. Staff Contract Table
+-- Employment contracts for staff
 CREATE TABLE StaffContracts (
     ContractID INT AUTO_INCREMENT PRIMARY KEY,
     StaffNumber VARCHAR(20) NOT NULL UNIQUE,
@@ -49,9 +48,9 @@ CREATE TABLE StaffContracts (
     StartDate DATE NOT NULL,
     CONSTRAINT fk_contracts_staff FOREIGN KEY (StaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB;
+);
 
--- 4. Staff Qualifications Table
+-- Professional qualifications held by staff
 CREATE TABLE StaffQualifications (
     QualificationID INT AUTO_INCREMENT PRIMARY KEY,
     StaffNumber VARCHAR(20) NOT NULL,
@@ -60,9 +59,9 @@ CREATE TABLE StaffQualifications (
     InstitutionName VARCHAR(150) NOT NULL,
     CONSTRAINT fk_qualifications_staff FOREIGN KEY (StaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB;
+);
 
--- 5. Staff Work Experience Table
+-- Previous work history for staff members
 CREATE TABLE StaffExperience (
     ExperienceID INT AUTO_INCREMENT PRIMARY KEY,
     StaffNumber VARCHAR(20) NOT NULL,
@@ -72,9 +71,9 @@ CREATE TABLE StaffExperience (
     FinishDate DATE NOT NULL,
     CONSTRAINT fk_experience_staff FOREIGN KEY (StaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB;
+);
 
--- 6. Department Staff Roster (Weekly Staff Allocation / Rotation)
+-- Weekly department shift allocations
 CREATE TABLE DepartmentStaffRoster (
     RosterID INT AUTO_INCREMENT PRIMARY KEY,
     DepartmentNumber INT NOT NULL,
@@ -86,18 +85,18 @@ CREATE TABLE DepartmentStaffRoster (
     CONSTRAINT fk_roster_staff FOREIGN KEY (StaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT uq_roster_staff_week UNIQUE (StaffNumber, WeekBeginning)
-) ENGINE=InnoDB;
+);
 
--- 7. Local Doctors Table
+-- External general practitioners
 CREATE TABLE LocalDoctors (
     DoctorID INT AUTO_INCREMENT PRIMARY KEY,
     FullName VARCHAR(100) NOT NULL,
     ClinicNumber VARCHAR(50) NOT NULL UNIQUE,
     Address VARCHAR(255) NOT NULL,
     TelephoneNumber VARCHAR(30) NOT NULL
-) ENGINE=InnoDB;
+);
 
--- 8. Patients Table
+-- Patient records and next-of-kin contacts
 CREATE TABLE Patients (
     PatientNumber VARCHAR(20) PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
@@ -115,9 +114,9 @@ CREATE TABLE Patients (
     DoctorID INT NOT NULL,
     CONSTRAINT fk_patients_doctor FOREIGN KEY (DoctorID) 
         REFERENCES LocalDoctors(DoctorID) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
--- 9. Appointments Table (Consultant Examinations & Referrals)
+-- Initial consultant examination appointments
 CREATE TABLE Appointments (
     AppointmentNumber INT AUTO_INCREMENT PRIMARY KEY,
     PatientNumber VARCHAR(20) NOT NULL,
@@ -130,9 +129,9 @@ CREATE TABLE Appointments (
         REFERENCES Patients(PatientNumber) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_appts_consultant FOREIGN KEY (ConsultantStaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
--- 10. Outpatient Clinic Appointments Table
+-- Outpatient clinic attendance
 CREATE TABLE OutpatientAppointments (
     OutpatientID INT AUTO_INCREMENT PRIMARY KEY,
     PatientNumber VARCHAR(20) NOT NULL,
@@ -144,9 +143,9 @@ CREATE TABLE OutpatientAppointments (
         REFERENCES Patients(PatientNumber) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_outpatient_nurse FOREIGN KEY (ChargeNurseStaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE=InnoDB;
+);
 
--- 11. Inpatient Stays & Ward Allocation Table
+-- Inpatient ward admissions and waiting list
 CREATE TABLE InpatientStays (
     InpatientStayID INT AUTO_INCREMENT PRIMARY KEY,
     PatientNumber VARCHAR(20) NOT NULL,
@@ -161,9 +160,9 @@ CREATE TABLE InpatientStays (
         REFERENCES Patients(PatientNumber) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_inpatients_dept FOREIGN KEY (DepartmentNumber) 
         REFERENCES Departments(DepartmentNumber) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
--- 12. Suppliers Table
+-- Registered medical and stock suppliers
 CREATE TABLE Suppliers (
     SupplierNumber INT AUTO_INCREMENT PRIMARY KEY,
     SupplierName VARCHAR(150) NOT NULL,
@@ -171,9 +170,9 @@ CREATE TABLE Suppliers (
     Email VARCHAR(100) NOT NULL,
     TelephoneNumber VARCHAR(30) NOT NULL,
     FaxNumber VARCHAR(30) NULL
-) ENGINE=InnoDB;
+);
 
--- 13. Pharmaceutical Supplies Table
+-- Pharmaceutical inventory stock
 CREATE TABLE PharmaceuticalSupplies (
     DrugNumber INT PRIMARY KEY,
     Name VARCHAR(100) NOT NULL,
@@ -186,9 +185,9 @@ CREATE TABLE PharmaceuticalSupplies (
     SupplierNumber INT NOT NULL,
     CONSTRAINT fk_pharma_supplier FOREIGN KEY (SupplierNumber) 
         REFERENCES Suppliers(SupplierNumber) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
--- 14. Surgical and Non-Surgical Supplies Table
+-- Surgical and general consumables
 CREATE TABLE SurgicalSupplies (
     ItemNumber INT PRIMARY KEY,
     ItemName VARCHAR(100) NOT NULL,
@@ -200,9 +199,9 @@ CREATE TABLE SurgicalSupplies (
     SupplierNumber INT NOT NULL,
     CONSTRAINT fk_surgical_supplier FOREIGN KEY (SupplierNumber) 
         REFERENCES Suppliers(SupplierNumber) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
--- 15. Patient Medication (Prescriptions) Table
+-- Medication prescribed to patients
 CREATE TABLE PatientMedications (
     MedicationID INT AUTO_INCREMENT PRIMARY KEY,
     PatientNumber VARCHAR(20) NOT NULL,
@@ -215,9 +214,9 @@ CREATE TABLE PatientMedications (
         REFERENCES Patients(PatientNumber) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_med_drug FOREIGN KEY (DrugNumber) 
         REFERENCES PharmaceuticalSupplies(DrugNumber) ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
--- 16. Department Requisitions Table
+-- Department stock requisitions from central store
 CREATE TABLE DepartmentRequisitions (
     RequisitionNumber VARCHAR(50) PRIMARY KEY,
     DepartmentNumber INT NOT NULL,
@@ -244,11 +243,9 @@ CREATE TABLE DepartmentRequisitions (
         REFERENCES SurgicalSupplies(ItemNumber) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_req_receiver FOREIGN KEY (ReceivedByStaffNumber) 
         REFERENCES Staff(StaffNumber) ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE=InnoDB;
+);
 
--- =============================================================================
--- PERFORMANCE INDEXES
--- =============================================================================
+-- Secondary indexes for frequent query lookups
 CREATE INDEX idx_staff_position ON Staff(Position);
 CREATE INDEX idx_staff_department ON Staff(DepartmentNumber);
 CREATE INDEX idx_roster_dept_week ON DepartmentStaffRoster(DepartmentNumber, WeekBeginning);
@@ -261,9 +258,9 @@ CREATE INDEX idx_patient_med_patient ON PatientMedications(PatientNumber);
 CREATE INDEX idx_req_dept_date ON DepartmentRequisitions(DepartmentNumber, RequisitionDate);
 
 
--- =============================================================================
--- PART 2: DML - SAMPLE POPULATION DATA
--- =============================================================================
+-- ----------------------------------------------------------------------
+-- 2. Sample Data Population
+-- ----------------------------------------------------------------------
 
 -- Departments
 INSERT INTO Departments (DepartmentNumber, DepartmentName, Location, TotalBeds, TelephoneExtension) VALUES
@@ -273,7 +270,7 @@ INSERT INTO Departments (DepartmentNumber, DepartmentName, Location, TotalBeds, 
 (14, 'Neurology', 'Block B', 40, 'Extn. 7714'),
 (15, 'General Surgery', 'Block D', 45, 'Extn. 7715');
 
--- Staff
+-- Staff members
 INSERT INTO Staff (StaffNumber, FirstName, LastName, Address, TelephoneNumber, DateOfBirth, Gender, NINumber, Position, CurrentSalary, SalaryScale, DepartmentNumber) VALUES
 ('S001', 'James', 'Cunningham', '10 Royal Terrace, Edinburgh', '0131-222-1000', '1958-03-15', 'Male', 'WA112233B', 'Medical Director', 95000.00, 'DIR scale', 11),
 ('S002', 'Eleanor', 'Vance', '14 Charlotte Square, Edinburgh', '0131-222-2000', '1965-08-22', 'Female', 'WB223344C', 'Human Resource Director', 72000.00, 'DIR scale', 11),
@@ -308,7 +305,7 @@ INSERT INTO StaffExperience (StaffNumber, OrganizationName, Position, StartDate,
 ('S098', 'Royal Infirmary', 'Nurse', '2004-08-01', '2005-07-31'),
 ('S344', 'Glasgow Royal Infirmary', 'Registrar', '1993-08-01', '1998-09-30');
 
--- Department Staff Roster (Figure 2: Week Beginning 12-Jan-14)
+-- Department Shift Roster (Orthopaedic - Week Beginning 12-Jan-14)
 INSERT INTO DepartmentStaffRoster (DepartmentNumber, StaffNumber, WeekBeginning, Shift) VALUES
 (11, 'S098', '2014-01-12', 'Late'),
 (11, 'S123', '2014-01-12', 'Late'),
@@ -316,13 +313,13 @@ INSERT INTO DepartmentStaffRoster (DepartmentNumber, StaffNumber, WeekBeginning,
 (11, 'S234', '2014-01-12', 'Night'),
 (11, 'S344', '2014-01-12', 'Early');
 
--- Local Doctors (Figure 3)
+-- Referring General Practitioners
 INSERT INTO LocalDoctors (FullName, ClinicNumber, Address, TelephoneNumber) VALUES
 ('Dr Helen Pearson', 'E102', '22 Cannongate Way, Edinburgh, EH1 6TY', '0131-332-0012'),
 ('Dr Alistair Mackay', 'G204', '15 St Vincent Street, Glasgow, G2 5QF', '0141-248-7788'),
 ('Dr Fiona Campbell', 'E105', '88 Ferry Road, Edinburgh, EH6 4AE', '0131-554-3321');
 
--- Patients (Figure 3, Figure 4, Figure 5)
+-- Patients
 INSERT INTO Patients (PatientNumber, FirstName, LastName, Address, TelephoneNumber, DateOfBirth, Gender, MaritalStatus, DateRegistered, NOK_FullName, NOK_Relationship, NOK_Address, NOK_TelephoneNumber, DoctorID) VALUES
 ('P10234', 'Anne', 'Phelps', '44 North Bridges, Cannonmills, Edinburgh, EH1 5GH', '0131-332-4111', '1933-12-12', 'Female', 'Single', '2009-02-21', 'James Phelps', 'Son', '145 Rowlands Street, Paisley, PA2 5FE', '0141-848-2211', 1),
 ('P10451', 'Robert', 'Drumtree', '12 Rose Street, Edinburgh, EH2 2PR', '0131-225-8899', '1942-04-18', 'Male', 'Married', '2010-05-14', 'Mary Drumtree', 'Wife', '12 Rose Street, Edinburgh, EH2 2PR', '0131-225-8899', 1),
@@ -332,7 +329,7 @@ INSERT INTO Patients (PatientNumber, FirstName, LastName, Address, TelephoneNumb
 ('P10787', 'Peter', 'Smith', '45 Craigmillar Park, Edinburgh, EH16 5PE', '0131-667-5511', '1948-06-14', 'Male', 'Married', '2013-11-02', 'Helen Smith', 'Wife', '45 Craigmillar Park, Edinburgh', '0131-667-5511', 1),
 ('P10034', 'Robert', 'MacDonald', '27 Inverleith Row, Edinburgh, EH3 5QH', '0131-552-3344', '1935-09-17', 'Male', 'Married', '2008-11-15', 'Clara MacDonald', 'Wife', '27 Inverleith Row, Edinburgh', '0131-552-3344', 1);
 
--- Appointments (Consultant Referrals)
+-- Consultant Examinations
 INSERT INTO Appointments (PatientNumber, ConsultantStaffNumber, AppointmentDate, AppointmentTime, ExaminationRoom, Recommendation) VALUES
 ('P10234', 'S344', '2014-01-08', '09:30:00', 'Room E252', 'Outpatient Clinic'),
 ('P10451', 'S344', '2014-01-10', '10:00:00', 'Room E252', 'Waiting List for Inpatient'),
@@ -345,7 +342,7 @@ INSERT INTO Appointments (PatientNumber, ConsultantStaffNumber, AppointmentDate,
 INSERT INTO OutpatientAppointments (PatientNumber, AppointmentDate, AppointmentTime, ClinicRoom, ChargeNurseStaffNumber) VALUES
 ('P10234', '2014-01-20', '10:30:00', 'Outpatient Suite 2', 'S011');
 
--- Inpatient Allocations & Waiting List (Figure 4)
+-- Inpatient Ward Admissions & Waiting List
 INSERT INTO InpatientStays (PatientNumber, DepartmentNumber, DateOnWaitingList, ExpectedStayDays, DatePlaced, ExpectedLeaveDate, ActualLeaveDate, BedNumber) VALUES
 ('P10451', 11, '2014-01-12', 5, '2014-01-12', '2014-01-17', '2014-01-16', 84),
 ('P10480', 11, '2014-01-12', 4, '2014-01-14', '2014-01-18', '2014-01-18', 79),
@@ -360,36 +357,36 @@ INSERT INTO Suppliers (SupplierNumber, SupplierName, Address, Email, TelephoneNu
 (2, 'Apex Surgical Solutions', '50 Industrial Estate, Leeds, LS10 1AB', 'sales@apexsurgical.co.uk', '0113-2345678', '0113-2345679'),
 (3, 'MediStock Supplies', '24 Harbor Way, Glasgow, G51 1DH', 'info@medistock.co.uk', '0141-555-8900', '0141-555-8901');
 
--- Pharmaceutical Supplies (Figure 5 & Figure 6)
+-- Pharmaceutical Supplies
 INSERT INTO PharmaceuticalSupplies (DrugNumber, Name, Description, Dosage, MethodOfAdmin, QuantityInStock, ReorderLevel, CostPerUnit, SupplierNumber) VALUES
 (10223, 'Morphine', 'Controlled Analgesic / Pain Killer', '10mg/ml', 'Oral', 250, 50, 27.75, 1),
 (10334, 'Tetracycline', 'Broad Spectrum Antibiotic', '0.5mg/ml', 'IV', 180, 40, 18.50, 1),
 (10455, 'Paracetamol', 'Analgesic and Antipyretic', '500mg', 'Oral', 1500, 200, 2.50, 1),
 (10567, 'Amoxicillin', 'Penicillin Antibiotic', '250mg', 'Oral', 600, 100, 9.20, 1);
 
--- Surgical and Non-Surgical Supplies
+-- Surgical and Non-Surgical Consumables
 INSERT INTO SurgicalSupplies (ItemNumber, ItemName, ItemType, Description, QuantityInStock, ReorderLevel, CostPerUnit, SupplierNumber) VALUES
 (20101, 'Sterile Syringes (10ml)', 'Surgical', 'Individually wrapped disposable sterile syringes', 1200, 300, 0.45, 2),
 (20102, 'Sterile Gauze Dressings', 'Surgical', 'Pack of 10 sterile wound dressings', 800, 150, 3.20, 2),
 (30101, 'Disposable Plastic Aprons', 'Non-Surgical', 'Roll of 100 polythene waterproof aprons', 50, 15, 12.00, 3),
 (30102, 'Clinical Waste Bags', 'Non-Surgical', 'Heavy duty yellow biohazard waste bags', 400, 100, 0.80, 3);
 
--- Patient Medication (Figure 5: Robert MacDonald)
+-- Patient Prescriptions
 INSERT INTO PatientMedications (PatientNumber, DrugNumber, UnitsPerDay, MethodOfAdmin, StartDate, FinishDate) VALUES
 ('P10034', 10223, 50, 'Oral', '2014-03-24', '2014-04-24'),
 ('P10034', 10334, 10, 'IV', '2014-03-24', '2014-04-17'),
 ('P10034', 10223, 10, 'Oral', '2014-04-25', '2014-05-02');
 
--- Department Requisitions (Figure 6: Requisition 034567712)
+-- Department Supply Requisitions
 INSERT INTO DepartmentRequisitions (RequisitionNumber, DepartmentNumber, StaffNumber, RequisitionDate, SupplyType, DrugNumber, ItemNumber, ItemName, Description, Dosage, MethodOfAdmin, CostPerUnit, QuantityRequired, ReceivedByStaffNumber, DateReceived) VALUES
 ('034567712', 11, 'S011', '2014-02-15', 'Pharmaceutical', 10223, NULL, 'Morphine', 'Pain killer', '10mg/ml', 'Oral', 27.75, 50, 'S011', '2014-02-18');
 
 
--- =============================================================================
--- PART 3: VIEWS FOR REPORTING REQUIREMENTS (c, f, h, i, k, n)
--- =============================================================================
+-- ----------------------------------------------------------------------
+-- 3. Views for Hospital Reporting
+-- ----------------------------------------------------------------------
 
--- View 1: Supporting Transaction (c) & Figure 2: Department Staff Allocation Report
+-- Department staff roster and allocation (Figure 2 / Requirement c)
 CREATE OR REPLACE VIEW vw_DepartmentStaffAllocation AS
 SELECT 
     d.DepartmentNumber,
@@ -410,7 +407,7 @@ JOIN Departments d ON dsr.DepartmentNumber = d.DepartmentNumber
 JOIN Staff s ON dsr.StaffNumber = s.StaffNumber
 LEFT JOIN Staff cn ON cn.DepartmentNumber = d.DepartmentNumber AND cn.Position = 'Charge Nurse';
 
--- View 2: Supporting Patient Registration Overview & Figure 3
+-- Patient registration details with doctor information (Figure 3)
 CREATE OR REPLACE VIEW vw_PatientRegistrationDetails AS
 SELECT 
     p.PatientNumber,
@@ -432,7 +429,7 @@ SELECT
 FROM Patients p
 JOIN LocalDoctors ld ON p.DoctorID = ld.DoctorID;
 
--- View 3: Supporting Transaction (f): Outpatient Clinic Referrals Report
+-- Outpatient clinic referral report (Requirement f)
 CREATE OR REPLACE VIEW vw_OutpatientClinicReport AS
 SELECT 
     oa.OutpatientID,
@@ -450,7 +447,7 @@ FROM OutpatientAppointments oa
 JOIN Patients p ON oa.PatientNumber = p.PatientNumber
 LEFT JOIN Staff cn ON oa.ChargeNurseStaffNumber = cn.StaffNumber;
 
--- View 4: Supporting Transaction (h) & Figure 4: Patients Currently Located in Department
+-- Current inpatients currently occupying beds (Figure 4 / Requirement h)
 CREATE OR REPLACE VIEW vw_CurrentInpatientsByDepartment AS
 SELECT 
     d.DepartmentNumber,
@@ -474,7 +471,7 @@ JOIN Patients p ON inp.PatientNumber = p.PatientNumber
 LEFT JOIN Staff cn ON cn.DepartmentNumber = d.DepartmentNumber AND cn.Position = 'Charge Nurse'
 WHERE inp.DatePlaced IS NOT NULL AND inp.ActualLeaveDate IS NULL;
 
--- View 5: Supporting Transaction (i): Patients on Waiting List by Department
+-- Inpatient waiting list for departments (Requirement i)
 CREATE OR REPLACE VIEW vw_DepartmentWaitingList AS
 SELECT 
     d.DepartmentNumber,
@@ -497,7 +494,7 @@ JOIN Departments d ON inp.DepartmentNumber = d.DepartmentNumber
 JOIN Patients p ON inp.PatientNumber = p.PatientNumber
 WHERE inp.DatePlaced IS NULL;
 
--- View 6: Supporting Transaction (k) & Figure 5: Patient Medication Report
+-- Patient medication profile report (Figure 5 / Requirement k)
 CREATE OR REPLACE VIEW vw_PatientMedicationReport AS
 SELECT 
     p.PatientNumber,
@@ -520,7 +517,7 @@ JOIN PharmaceuticalSupplies ps ON pm.DrugNumber = ps.DrugNumber
 LEFT JOIN InpatientStays inp ON p.PatientNumber = inp.PatientNumber AND inp.ActualLeaveDate IS NULL
 LEFT JOIN Departments d ON inp.DepartmentNumber = d.DepartmentNumber;
 
--- View 7: Supporting Transaction (n) & Figure 6: Department Requisitions Report
+-- Department stock requisitions report (Figure 6 / Requirement n)
 CREATE OR REPLACE VIEW vw_DepartmentRequisitionsReport AS
 SELECT 
     dr.RequisitionNumber,
@@ -546,15 +543,13 @@ JOIN Staff s ON dr.StaffNumber = s.StaffNumber
 LEFT JOIN Staff rec ON dr.ReceivedByStaffNumber = rec.StaffNumber;
 
 
--- =============================================================================
--- PART 4: STORED PROCEDURES FOR TRANSACTION REQUIREMENTS (a through n)
--- =============================================================================
+-- ----------------------------------------------------------------------
+-- 4. Stored Procedures for System Transactions
+-- ----------------------------------------------------------------------
 
 DELIMITER $$
 
--- -----------------------------------------------------------------------------
--- Transaction (a): Create and maintain records of staff (HR Director)
--- -----------------------------------------------------------------------------
+-- Transaction a: HR staff management
 CREATE PROCEDURE sp_AddStaff(
     IN p_StaffNumber VARCHAR(20),
     IN p_FirstName VARCHAR(50),
@@ -645,9 +640,7 @@ BEGIN
         StartDate = p_StartDate;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (b): Search staff by qualifications or work experience (HR Director)
--- -----------------------------------------------------------------------------
+-- Transaction b: Search staff qualifications and experience
 CREATE PROCEDURE sp_SearchStaffByQualification(
     IN p_QualType VARCHAR(100)
 )
@@ -683,9 +676,7 @@ BEGIN
     WHERE se.Position LIKE CONCAT('%', p_Position, '%');
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (c): Roster staff & Report department staff allocation
--- -----------------------------------------------------------------------------
+-- Transaction c: Shift assignment and roster reporting
 CREATE PROCEDURE sp_AssignStaffShift(
     IN p_DepartmentNumber INT,
     IN p_StaffNumber VARCHAR(20),
@@ -709,9 +700,7 @@ BEGIN
       AND (p_WeekBeginning IS NULL OR WeekBeginning = p_WeekBeginning);
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (d): Create and maintain patient records (All Staff)
--- -----------------------------------------------------------------------------
+-- Transaction d: Patient registration and profile management
 CREATE PROCEDURE sp_RegisterPatient(
     IN p_PatientNumber VARCHAR(20),
     IN p_FirstName VARCHAR(50),
@@ -768,9 +757,7 @@ BEGIN
     DELETE FROM Patients WHERE PatientNumber = p_PatientNumber;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (e) & (f): Outpatient Clinic referrals & reports (Charge Nurse/Director)
--- -----------------------------------------------------------------------------
+-- Transactions e & f: Outpatient appointments and scheduling
 CREATE PROCEDURE sp_ReferToOutpatientClinic(
     IN p_PatientNumber VARCHAR(20),
     IN p_AppointmentDate DATE,
@@ -793,9 +780,7 @@ BEGIN
     ORDER BY AppointmentDate, AppointmentTime;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (g): Refer patient to department / waiting list (Charge Nurse)
--- -----------------------------------------------------------------------------
+-- Transactions g, h, i: Inpatient stays, bed allocation, and discharges
 CREATE PROCEDURE sp_ReferPatientToDepartment(
     IN p_PatientNumber VARCHAR(20),
     IN p_DepartmentNumber INT,
@@ -831,9 +816,6 @@ BEGIN
     WHERE InpatientStayID = p_InpatientStayID;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (h): Report patients currently located in department
--- -----------------------------------------------------------------------------
 CREATE PROCEDURE sp_GetCurrentDepartmentPatients(
     IN p_DepartmentNumber INT
 )
@@ -843,9 +825,6 @@ BEGIN
     WHERE DepartmentNumber = p_DepartmentNumber;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (i): Report patients on waiting list for department
--- -----------------------------------------------------------------------------
 CREATE PROCEDURE sp_GetDepartmentWaitingList(
     IN p_DepartmentNumber INT
 )
@@ -856,9 +835,7 @@ BEGIN
     ORDER BY DateOnWaitingList ASC;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (j): Create and maintain medication given to patient (Charge Nurse)
--- -----------------------------------------------------------------------------
+-- Transactions j & k: Prescriptions and medication logs
 CREATE PROCEDURE sp_PrescribeMedication(
     IN p_PatientNumber VARCHAR(20),
     IN p_DrugNumber INT,
@@ -893,9 +870,6 @@ BEGIN
     DELETE FROM PatientMedications WHERE MedicationID = p_MedicationID;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (k): Report medication given to a particular patient (Charge Nurse)
--- -----------------------------------------------------------------------------
 CREATE PROCEDURE sp_GetPatientMedicationReport(
     IN p_PatientNumber VARCHAR(20)
 )
@@ -906,9 +880,7 @@ BEGIN
     ORDER BY StartDate DESC;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (l): Create and maintain records of suppliers (Medical Director)
--- -----------------------------------------------------------------------------
+-- Transaction l: Medical suppliers
 CREATE PROCEDURE sp_AddSupplier(
     IN p_SupplierName VARCHAR(150),
     IN p_Address VARCHAR(255),
@@ -946,9 +918,7 @@ BEGIN
     DELETE FROM Suppliers WHERE SupplierNumber = p_SupplierNumber;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (m): Create and maintain department requisitions (Charge Nurse)
--- -----------------------------------------------------------------------------
+-- Transactions m & n: Department store requisitions
 CREATE PROCEDURE sp_CreateRequisition(
     IN p_RequisitionNumber VARCHAR(50),
     IN p_DepartmentNumber INT,
@@ -988,9 +958,6 @@ BEGIN
     WHERE RequisitionNumber = p_RequisitionNumber;
 END$$
 
--- -----------------------------------------------------------------------------
--- Transaction (n): Report supplies provided to specific departments (Charge Nurse/Director)
--- -----------------------------------------------------------------------------
 CREATE PROCEDURE sp_GetDepartmentRequisitionsReport(
     IN p_DepartmentNumber INT
 )
@@ -1004,11 +971,11 @@ END$$
 DELIMITER ;
 
 
--- =============================================================================
--- PART 5: DATABASE TESTING AND VALIDATION (TRANSACTIONS AUDIT)
--- =============================================================================
+-- ----------------------------------------------------------------------
+-- 5. Test Queries and Validation Checks
+-- ----------------------------------------------------------------------
 
--- 1. Test Viewing Initial Data (Reports matching Figures 2 through 6)
+-- 1. Check reports against case study figures
 SELECT * FROM vw_DepartmentStaffAllocation WHERE DepartmentNumber = 11;
 SELECT * FROM vw_PatientRegistrationDetails WHERE PatientNumber = 'P10234';
 SELECT * FROM vw_CurrentInpatientsByDepartment WHERE DepartmentNumber = 11;
@@ -1016,42 +983,42 @@ SELECT * FROM vw_DepartmentWaitingList WHERE DepartmentNumber = 11;
 SELECT * FROM vw_PatientMedicationReport WHERE PatientNumber = 'P10034';
 SELECT * FROM vw_DepartmentRequisitionsReport WHERE DepartmentNumber = 11;
 
--- 2. Test Transaction (a): Adding New Staff Member
+-- 2. Test Transaction a: add a new staff member with credentials
 CALL sp_AddStaff('S401', 'Grace', 'Brown', '12 Waverley Bridge, Edinburgh', '0131-556-0123', '1985-04-12', 'Female', 'WH889900I', 'Nurse', 13000.00, '3A scale', 11);
 CALL sp_AddStaffQualification('S401', 'BN Nursing', '2007-06-20', 'Queen Margaret University');
 CALL sp_SetStaffContract('S401', 37.5, 'Permanent', 'Monthly', '2014-02-01');
 
--- 3. Test Transaction (b): Search Staff by Qualification and Experience
+-- 3. Test Transaction b: search staff by qualification and experience
 CALL sp_SearchStaffByQualification('Nursing');
 CALL sp_SearchStaffByExperience('Staff Nurse');
 
--- 4. Test Transaction (c): Assigning Shift and Generating Roster Report
+-- 4. Test Transaction c: assign shift and retrieve weekly roster
 CALL sp_AssignStaffShift(11, 'S401', '2014-01-12', 'Early');
 CALL sp_GetDepartmentStaffReport(11, '2014-01-12');
 
--- 5. Test Transaction (d): Registering and Updating a Patient
+-- 5. Test Transaction d: register and update a patient
 CALL sp_RegisterPatient('P10999', 'Nina', 'Johnson', '543 Spruce St, Townsville, EH12 9YZ', '0131-555-0987', '1950-07-22', 'Female', 'Married', '2014-02-01', 'Mark Johnson', 'Husband', '543 Spruce St', '0131-555-0987', 1);
 CALL sp_UpdatePatient('P10999', 'Nina', 'Johnson-Smith', '543 Spruce St, Townsville, EH12 9YZ', '0131-555-0987', 'Married', 'Mark Johnson-Smith', 'Husband', '543 Spruce St', '0131-555-0987', 1);
 
--- 6. Test Transaction (e) & (f): Outpatient Clinic Referral & Reporting
+-- 6. Test Transactions e & f: outpatient scheduling and report
 CALL sp_ReferToOutpatientClinic('P10999', '2014-02-10', '11:00:00', 'Suite 1', 'S011');
 CALL sp_GetOutpatientReport('2014-02-10');
 
--- 7. Test Transaction (g), (h), (i): Department Referral, Waiting List, Bed Allocation & Discharge
+-- 7. Test Transactions g, h, i: admission, bed allocation, and discharge
 CALL sp_ReferPatientToDepartment('P10999', 11, '2014-02-02', 7);
 CALL sp_GetDepartmentWaitingList(11);
 CALL sp_AllocateBedToPatient(7, '2014-02-03', '2014-02-10', 88);
 CALL sp_GetCurrentDepartmentPatients(11);
 CALL sp_DischargePatient(7, '2014-02-09');
 
--- 8. Test Transaction (j) & (k): Prescribing and Reporting Medication
+-- 8. Test Transactions j & k: prescribe medication and view medication report
 CALL sp_PrescribeMedication('P10999', 10455, 4, 'Oral', '2014-02-03', '2014-02-09');
 CALL sp_GetPatientMedicationReport('P10999');
 
--- 9. Test Transaction (l): Adding a Supplier
+-- 9. Test Transaction l: add new supplier
 CALL sp_AddSupplier('BioHealth Supplies', '99 Innovation Way, Oxford, OX1 2JD', 'info@biohealth.co.uk', '01865-998877', '01865-998878');
 
--- 10. Test Transaction (m) & (n): Requisition Creation, Receiving, and Reporting
+-- 10. Test Transactions m & n: create, receive, and report requisition
 CALL sp_CreateRequisition('034567799', 11, 'S011', '2014-02-20', 'Surgical/Non-Surgical', NULL, 20101, 'Sterile Syringes (10ml)', 'Individually wrapped disposable sterile syringes', NULL, NULL, 0.45, 100);
 CALL sp_ReceiveRequisition('034567799', 'S011', '2014-02-22');
 CALL sp_GetDepartmentRequisitionsReport(11);
